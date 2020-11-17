@@ -13,11 +13,12 @@
                 ></v-text-field>
                 <v-spacer></v-spacer>
                 <v-select
-                            v-model="search"
+                            v-model="sort"
                             :items="['Penting','Tidak penting']"
                             single-line
                             hide-details
-                            label="Search"
+                            label="Sorting"
+                            @change="sortedArray(sort)"
                 ></v-select>
                 <v-spacer></v-spacer>
                 <v-btn color="success" dark @click="dialog =true">
@@ -25,12 +26,12 @@
                 </v-btn>
             </v-card-title>
             <v-data-table :headers="headers" 
-            :items="todos" 
-            :search="search"
-            :single-expand="singleExpand"
-            item-key="note"
-            show-expand
-             class="elevation-1"
+                :items="todos" 
+                :search="search"
+                :single-expand="singleExpand"
+                item-key="note"
+                show-expand
+                class="elevation-1"
             >
                 <template v-slot:[`item.actions`]="{item}">
                     <v-btn small class="mr-2" @click="editItem(item)">
@@ -72,6 +73,14 @@
                     <td :colspan="headers.length">
                         {{ item.note }}
                     </td>
+                </template>
+               <template v-slot:[`item.check`]="{ item }">
+                    <v-checkbox
+                        color="blue"
+                        v-model="item.check"
+                        multiple
+                        :key="item" @click.capture.stop="checkItem(item)"
+                    ></v-checkbox>
                 </template>
             </v-data-table>
         </v-card>
@@ -129,6 +138,19 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+        <v-divider></v-divider>
+        <br>
+        <v-card v-if="selected.length!=0" class="elevation-1">
+            <v-card-title>Delete Multipe</v-card-title>
+            <v-list-item v-for="(item, index) in selected" :key="index">
+                   <li>{{item.task}}</li>
+            </v-list-item>
+            <v-card-actions>
+                <v-btn color="error" class="pa-2 ma-2 float-left" dark @click="deleteAll">
+                 Hapus Semua
+                </v-btn>
+            </v-card-actions>  
+        </v-card>
     </v-main>
 </template>
 
@@ -150,9 +172,8 @@
                         value: "task",
                     },
                     {text:"Priority", value:"priority"},
-                  
                     {text:"Actions", value:"actions"},
-                    { text: '', value: 'data-table-expand'}
+                    {text:"", value:"check"},
                 ],
                 todos:[
                     {
@@ -176,6 +197,8 @@
                     priority:null,
                     note: null,
                 },
+                selected:[],
+                sort:"unsort",
             };
         },
         methods: {
@@ -221,7 +244,21 @@
                 this.resetForm();
                 this.dialog= false;
                 this.edit=false;
-            }
+            },
+            checkItem(item){
+                if(this.selected.includes(item)){
+                    this.selected.splice(this.selected.indexOf(item),1);
+                }
+                else{
+                    this.selected.push(item);
+                };
+            },
+            deleteAll(){
+                for(var i = 0; i<this.selected.length; i++){
+                    this.todos.splice(this.todos.indexOf(this.selected[i]),1);
+                }
+                this.selected=[];
+            },
         },
     };
 </script>
